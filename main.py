@@ -87,5 +87,5 @@ if __name__ == "__main__":
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, message_handler))
 
     # Set up the webhook
-    bot.set_webhook(f"https://<your-render-service-url>/{TOKEN}")
+    bot.set_webhook(f"https://telegram-ron-ai-2.onrender.com{TOKEN}")
     app.run(host="0.0.0.0", port=5000)
