@@ -1,17 +1,15 @@
 import os
-from flask import Flask, request
 from telegram import Bot, Update
-from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackContext, Filters
 from dotenv import load_dotenv
-import random
 
 # Load environment variables
 load_dotenv()
+
 TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME")
 
 bot = Bot(TOKEN)
-app = Flask(__name__)
 
 # Data structure to keep track of anonymous users and their pairings
 waiting_users = []
@@ -31,9 +29,7 @@ def start(update: Update, context: CallbackContext):
             f"You must join our channel first: https://t.me/{CHANNEL_USERNAME.strip('@')}"
         )
         return
-    update.message.reply_text(
-        "Welcome! Use /find to start chatting anonymously with another user."
-    )
+    update.message.reply_text("Welcome! Use /find to start chatting anonymously with another user.")
 
 def find(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
@@ -70,22 +66,26 @@ def message_handler(update: Update, context: CallbackContext):
     else:
         update.message.reply_text("You are not in a chat! Use /find to connect with someone.")
 
-# Flask route to handle Telegram webhooks
-@app.route(f"/{TOKEN}", methods=["POST"])
-def webhook():
-    update = Update.de_json(request.get_json(), bot)
-    dispatcher.process_update(update)
-    return "OK"
+def main():
+    # Set up Updater with the token
+    updater = Updater(TOKEN)
 
-if __name__ == "__main__":
-    from telegram.ext import Dispatcher
-    dispatcher = Dispatcher(bot, None, workers=0)
+    # Get the dispatcher to add handlers
+    dispatcher = updater.dispatcher
 
+    # Register command handlers
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("find", find))
     dispatcher.add_handler(CommandHandler("leave", leave))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, message_handler))
 
-    # Set up the webhook
-    bot.set_webhook(f"https://telegram-ron-ai-2.onrender.com{TOKEN}")
-    app.run(host="0.0.0.0", port=5000)
+    # Register message handler
+    dispatcher.add_handler(MessageHandler(Filters.TEXT & ~Filters.COMMAND, message_handler))
+
+    # Start the bot
+    updater.start_polling()
+
+    # Run the bot until you stop it manually
+    updater.idle()
+
+if __name__ == "__main__":
+    main()
