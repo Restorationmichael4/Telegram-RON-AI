@@ -1,15 +1,17 @@
+import os
 from flask import Flask, request
 from telegram import Bot, Update
 from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters, CallbackContext
+from dotenv import load_dotenv
 import random
 
-# Telegram Bot API Token
-TOKEN = "7975644638:AAFrZ1FxLMZlaGE98is3wzZqBWnp_9ErNnY"
+# Load environment variables
+load_dotenv()
+TOKEN = os.getenv("BOT_TOKEN")
+CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME")
+
 bot = Bot(TOKEN)
 app = Flask(__name__)
-
-# Your channel username
-CHANNEL_USERNAME = "@destitans"
 
 # Data structure to keep track of anonymous users and their pairings
 waiting_users = []
@@ -26,7 +28,7 @@ def start(update: Update, context: CallbackContext):
     user = update.message.from_user
     if not is_member(user.id):
         update.message.reply_text(
-            "You must join our channel first: https://t.me/destitans"
+            f"You must join our channel first: https://t.me/{CHANNEL_USERNAME.strip('@')}"
         )
         return
     update.message.reply_text(
